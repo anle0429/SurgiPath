@@ -10,15 +10,41 @@ __pycache__/
 dist/
 build/
 
+# Secrets — never commit
+.env
+
+# Large binary models (download or train separately)
+models/*.pt
+models/*.task
+
+# Training dataset (too large for git)
+Final_Merged_Dataset/
+
+# YOLO training runs
+runs/
+
+# Empty data folder
+data/
+
+# Logs (generated at runtime)
+logs/events.jsonl
+
 # Streamlit
 .streamlit/secrets.toml
 
-# IDE
+# IDE / editor
 .vscode/
 .idea/
 *.swp
 *.swo
+.claude/
 
-# OS
+# Docs / plans (internal dev notes)
+docs/
+
+# OS junk
 .DS_Store
 Thumbs.db
+
+# Peer duplicate
+app(1).py

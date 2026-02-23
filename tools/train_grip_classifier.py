@@ -1,6 +1,6 @@
 """
-Grip Classifier Training Script for MedLab Coach AI
-=====================================================
+Grip Classifier Training Script for SurgiPath
+===============================================
 
 HOW TO USE:
   1. First collect data: streamlit run tools/collect_grip_data.py

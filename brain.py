@@ -1,9 +1,4 @@
-# requires: google-genai, python-dotenv, pydantic
-"""
-brain.py — SurgiPath Reasoning Engine (Clarity AI)
-Fully dynamic AI backend — no hardcoded procedures.
-Uses the google-genai SDK with Gemini thinking mode and Live API.
-"""
+"""brain.py — AI backend for SurgiPath using Gemini."""
 
 from __future__ import annotations
 
@@ -24,13 +19,11 @@ from pydantic import BaseModel
 
 load_dotenv()
 
-# ──────────────────────────────────────────────
-# Gemini client (google-genai SDK)
-# ──────────────────────────────────────────────
+# Gemini client setup
 
 _client = None 
 
-MODEL = "gemini-3-flash-preview"
+MODEL = "gemini-3-pro-preview"
 LIVE_MODEL = "gemini-2.0-flash-exp-image-generation"
 
 
@@ -52,9 +45,7 @@ def _get_client():
     return _client
 
 
-# ──────────────────────────────────────────────
 # Pydantic schemas
-# ──────────────────────────────────────────────
 
 class SyllabusStep(BaseModel):
     step_name: str
@@ -72,9 +63,7 @@ class SyllabusError(BaseModel):
     error: str
 
 
-# ──────────────────────────────────────────────
 # Action result types
-# ──────────────────────────────────────────────
 
 @dataclass
 class ActionSuccess:
@@ -91,12 +80,7 @@ class ActionCorrection:
     message: str = ""
 
 
-# ──────────────────────────────────────────────
-# Standard YOLO tool keys
-# ──────────────────────────────────────────────
-# Gemini is instructed to use these when applicable.
-# Also used to generate distractor tools for the
-# video-callback simulation.
+# Standard YOLO tool keys Gemini can reference
 
 STANDARD_TOOL_KEYS = [
     "scalpel", "forceps", "scissors", "retractor", "needle_driver",
@@ -111,12 +95,8 @@ STANDARD_TOOL_KEYS = [
 ]
 
 
-# ──────────────────────────────────────────────
-# Multimodal Live API — real-time frame analysis
-# ──────────────────────────────────────────────
-
 class LiveProctor:
-    """Persistent WebSocket to the Gemini Live API for real-time visual analysis."""
+    """Real-time Gemini Live API connection for per-frame analysis."""
 
     def __init__(self) -> None:
         self._frame_queue: queue.Queue[bytes] = queue.Queue(maxsize=3)
@@ -321,9 +301,7 @@ def set_live_proctor(proctor: LiveProctor | None) -> None:
     _live_proctor_ref = proctor
 
 
-# ──────────────────────────────────────────────
 # 1. Dynamic syllabus generation
-# ──────────────────────────────────────────────
 
 _SYLLABUS_SYSTEM = """\
 You are Clarity, the AI proctor for SurgiPath, \
@@ -368,7 +346,6 @@ RESPONSE FORMAT — valid JSON only:
 
 
 def generate_dynamic_syllabus(user_input: str) -> TrainingSyllabus | SyllabusError:
-    """Send any procedure name to Gemini and get a validated syllabus or error."""
     client = _get_client()
 
     if not client:
@@ -385,7 +362,6 @@ def generate_dynamic_syllabus(user_input: str) -> TrainingSyllabus | SyllabusErr
             config=types.GenerateContentConfig(
                 system_instruction=_SYLLABUS_SYSTEM,
                 response_mime_type="application/json",
-                thinking_config=types.ThinkingConfig(thinking_budget=2048),
             ),
         )
         raw = response.text.strip()
@@ -404,9 +380,7 @@ def generate_dynamic_syllabus(user_input: str) -> TrainingSyllabus | SyllabusErr
         return SyllabusError(error=f"Schema validation failed: {exc}")
 
 
-# ──────────────────────────────────────────────
 # 2. Proctoring engine
-# ──────────────────────────────────────────────
 
 _COACHING_SYSTEM = """\
 You are Clarity, the AI proctor for SurgiPath, \
@@ -429,7 +403,6 @@ def check_student_action(
     current_instruction: str = "",
     current_safety_tip: str = "",
 ) -> ActionSuccess | ActionCorrection:
-    """Compare detections against the target and return success or coaching."""
     if current_target_tool in detected_tools:
         return ActionSuccess(
             tool=current_target_tool,
@@ -455,7 +428,6 @@ def check_student_action(
 
 
 def _get_coaching_tip(instruction: str, target_tool: str, wrong_tool: str) -> str:
-    """Generate a coaching tip via Gemini with thinking mode enabled."""
     client = _get_client()
 
     if client:
@@ -484,9 +456,7 @@ def _get_coaching_tip(instruction: str, target_tool: str, wrong_tool: str) -> st
     )
 
 
-# ──────────────────────────────────────────────
 # 3. Manual override — skip warning
-# ──────────────────────────────────────────────
 
 _SKIP_SYSTEM = """\
 You are Clarity, the AI proctor for SurgiPath, \
@@ -511,7 +481,6 @@ def generate_skip_warning(
     instruction: str,
     reason: str = "",
 ) -> str:
-    """Call Gemini for a penalty warning when the student skips a tool."""
     client = _get_client()
 
     if client:
@@ -541,9 +510,7 @@ def generate_skip_warning(
     )
 
 
-# ──────────────────────────────────────────────
 # 4. Post-op session report
-# ──────────────────────────────────────────────
 
 _REPORT_SYSTEM = """\
 You are Clarity, the AI proctor for SurgiPath, \
@@ -573,7 +540,6 @@ def generate_session_report(
     skipped_steps: list[dict],
     mastery_score: int,
 ) -> str:
-    """Generate a post-op session report via Gemini."""
     skip_details = "\n".join(
         f"  - Step {s.get('step_idx', '?') + 1}: skipped '{s.get('tool', '?')}' "
         f"(reason: {s.get('reason', 'none')})"
@@ -618,9 +584,7 @@ def generate_session_report(
     )
 
 
-# ──────────────────────────────────────────────
 # 5. Learning resources for the procedure
-# ──────────────────────────────────────────────
 
 _RESOURCES_SYSTEM = """\
 You are Clarity, the AI proctor for SurgiPath. \
@@ -634,7 +598,6 @@ Prioritize open-access or widely available sources when possible."""
 
 
 def generate_learning_resources(procedure: str) -> str:
-    """Ask Gemini for curated learning resources for the given procedure."""
     client = _get_client()
     prompt = (
         f"Procedure: {procedure}\n\n"
@@ -673,9 +636,7 @@ def generate_learning_resources(procedure: str) -> str:
     )
 
 
-# ──────────────────────────────────────────────
 # 6. Final critique — Clarity live feedback + event log
-# ──────────────────────────────────────────────
 
 _CRITIQUE_SYSTEM = """\
 You are Clarity, the AI proctor for SurgiPath. \

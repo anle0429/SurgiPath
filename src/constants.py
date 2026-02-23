@@ -1,5 +1,5 @@
 """
-Shared constants for MedLab Coach AI.
+Shared constants for SurgiPath.
 
 Single place to change paths, config defaults, session state key names.
 """

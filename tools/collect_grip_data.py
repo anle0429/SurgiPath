@@ -1,6 +1,6 @@
 """
-Grip Data Collection Tool for MedLab Coach AI
-===============================================
+Grip Data Collection Tool for SurgiPath
+========================================
 
 HOW TO USE:
   1. Run:  streamlit run tools/collect_grip_data.py --server.headless true
@@ -297,7 +297,7 @@ with col_left:
             else:
                 status_placeholder.warning("No hands detected. Show your hand to the camera.")
 
-            frame_placeholder.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB", use_container_width=True)
+            frame_placeholder.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB", width="stretch")
     else:
         st.error("Camera not available. Connect a webcam and reload.")
 
