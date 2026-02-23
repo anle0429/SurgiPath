@@ -27,7 +27,7 @@ SurgiPath watches medical students practice through a webcam, detects surgical i
 |-----------|-----------|
 | UI | Streamlit with custom CSS |
 | Live video | WebRTC (streamlit-webrtc) + OpenCV fallback |
-| Instrument detection | YOLOv11 (Ultralytics), custom-trained |
+| Instrument detection | YOLOv8n (Ultralytics), custom-trained |
 | Hand tracking | MediaPipe HandLandmarker (21 keypoints × 2 hands) |
 | Coaching engine | JSON rule definitions + evidence-gated evaluation |
 | Voice alerts | edge-tts / gTTS / pyttsx3 (3-tier fallback) |
