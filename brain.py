@@ -1,4 +1,4 @@
-"""brain.py — AI backend for SurgiPath using Gemini."""
+"""brain.py — AI backend for SurgiPath using Gemini. Optional feature for generating Operation procedure, I don't want my project look like AI wrapper so it is optional"""
 
 from __future__ import annotations
 
