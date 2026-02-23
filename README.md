@@ -12,7 +12,7 @@ SurgiPath watches medical students practice through a webcam, detects surgical i
 
 ## Features
 
-- **Real-time instrument detection** — Custom YOLOv11 trained on 3,070 images recognizes 8 surgical tools (97.1% mAP50)
+- **Real-time instrument detection** — Custom YOLOv8n trained on 3,070 images recognizes 8 surgical tools (97.1% mAP50)
 - **Hand technique analysis** — MediaPipe tracks 21 keypoints per hand to evaluate grip type, wrist stability, instrument angle, jerk-based motion smoothness, and economy of movement
 - **Rule-based coaching engine** — JSON-defined rules per surgical phase with evidence gating and debounce to minimize false alerts
 - **Voice coaching** — Text-to-speech alerts for technique issues (edge-tts with offline fallback)
@@ -71,7 +71,7 @@ Download and place in the `models/` directory:
 
 | File | Size | Source |
 |------|------|--------|
-| `best.pt` | ~5 MB | Custom YOLOv11 (from training run) |
+| `best.pt` | ~5 MB | Custom YOLOv8n (from training run) |
 | `hand_landmarker.task` | ~8 MB | [MediaPipe](https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task) |
 
 ### Gemini API key (optional)
@@ -173,8 +173,8 @@ MIT License.
 
 ## Acknowledgments
 
-- **Kushal Shrestha** — collaborator
-- [Ultralytics](https://github.com/ultralytics/ultralytics) — YOLOv11
+- **Kushal Shrestha** — collaborator (https://github.com/Kushal-Shr)
+- [Ultralytics](https://github.com/ultralytics/ultralytics) — YOLOv8n
 - [MediaPipe](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker) — hand landmark detection
 - [Streamlit](https://streamlit.io/) — web app framework
 - [shaniangel/surgical_tool_detection](https://github.com/shaniangel/surgical_tool_detection) — pretrained surgical tool YOLO model
