@@ -1,4 +1,3 @@
-# MedLab Coach AI - Skill Assessment for Medical Training Labs
 streamlit
 streamlit-autorefresh
 streamlit-webrtc
