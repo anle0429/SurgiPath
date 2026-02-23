@@ -1,8 +1,7 @@
 """
 SurgiPath — AI-guided surgical training coach.
 
-Combines YOLOv11 (tool detection) + MediaPipe (hand tracking) + Gemini AI
-(procedure generation & coaching) into a single Streamlit app.
+Combines YOLOv11 (tool detection) + MediaPipe (hand tracking).
 
 Three phases:
   1. SETUP   — Camera calibration + tool checklist (all required tools visible?)
