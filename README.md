@@ -8,7 +8,7 @@ SurgiPath watches medical students practice through a webcam, detects surgical i
 
 <!-- Replace with a GIF, screenshot, or link to your demo video -->
 
-*Coming soon
+*Coming soon*
 
 ## Features
 
@@ -16,7 +16,7 @@ SurgiPath watches medical students practice through a webcam, detects surgical i
 - **Hand technique analysis** — MediaPipe tracks 21 keypoints per hand to evaluate grip type, wrist stability, instrument angle, jerk-based motion smoothness, and economy of movement
 - **Rule-based coaching engine** — JSON-defined rules per surgical phase with evidence gating and debounce to minimize false alerts
 - **Voice coaching** — Text-to-speech alerts for technique issues (edge-tts with offline fallback)
-- **WebRTC video pipeline** — YOLO + MediaPipe inference runs on a callback thread at 15-30 FPS, decoupled from UI rendering
+- **WebRTC video pipeline** — YOLO + MediaPipe inference runs on a callback thread at ~15-30 FPS, decoupled from UI rendering
 - **Three-phase workflow** — Setup (tool checklist + calibration) → Practice (real-time coaching) → Report (mastery score + error log)
 - **Demo mode** — Full walkthrough without a camera using synthetic detections
 - **Optional AI procedure generation** — Gemini API can generate training plans from text input (not required to run)
@@ -173,7 +173,7 @@ MIT License.
 
 ## Acknowledgments
 
-- **Kushal Shrestha** — collaborator (https://github.com/Kushal-Shr)
+- **Kushal Shrestha** — collaborator ([GitHub](https://github.com/Kushal-Shr))
 - [Ultralytics](https://github.com/ultralytics/ultralytics) — YOLOv8n
 - [MediaPipe](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker) — hand landmark detection
 - [Streamlit](https://streamlit.io/) — web app framework
