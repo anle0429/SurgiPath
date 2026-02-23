@@ -8,7 +8,7 @@ SurgiPath watches medical students practice through a webcam, detects surgical i
 
 <!-- Replace with a GIF, screenshot, or link to your demo video -->
 
-*Coming soon — add a GIF or screenshot of the app in action here.*
+*Coming soon
 
 ## Features
 
