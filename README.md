@@ -44,8 +44,8 @@ SurgiPath watches medical students practice through a webcam, detects surgical i
 ### Steps
 
 ```bash
-git clone https://github.com/anle0429/Panacea.git
-cd Panacea
+git clone https://github.com/anle0429/SurgiPath
+cd SurgiPath
 python -m venv venv
 ```
 
