@@ -28,119 +28,43 @@ def render_setup_tab(
     preop_required: list[dict],
     stable_seconds: float,
     is_demo: bool,
-    resolve_brain_import,
-    generate_dynamic_syllabus,
-    SyllabusError,
 ) -> None:
     section_header("01 / SETUP", "Lab Setup Checklist")
 
     # --- Procedure generation ---
-    if st.session_state.get("_ai_reasoning_enabled", True):
-        st.markdown("### Upload Your Procedure")
-        mode_opt = st.radio(
-            "Procedure mode",
-            ["AI generate procedure", "Manual note (no AI)"],
-            horizontal=True,
-            key="procedure_mode_radio",
+    st.markdown("### Upload Your Procedure")
+    table_seed = st.session_state.get("_manual_steps_table", [])
+    if not table_seed:
+        table_seed = [{"step_name": "Step 1", "instruction": "Prepare sterile field", "time_limit_seconds": 60}]
+    edited = st.data_editor(
+        table_seed, key="manual_steps_editor", num_rows="dynamic", width="stretch",
+        column_config={
+            "step_name": st.column_config.TextColumn("Step"),
+            "instruction": st.column_config.TextColumn("Instruction"),
+            "time_limit_seconds": st.column_config.NumberColumn("Time (s)", min_value=10, max_value=600, step=5),
+        },
+        hide_index=True,
+    )
+    st.session_state["_manual_steps_table"] = edited
+    if st.button("Use Manual Procedure Table", width="stretch"):
+        steps = []
+        for i, row in enumerate(edited):
+            instr = str(row.get("instruction", "")).strip()
+            if not instr:
+                continue
+            step_name = str(row.get("step_name", "")).strip() or f"Step {i+1}"
+            tlim = int(row.get("time_limit_seconds", 60) or 60)
+            steps.append({"step_name": step_name, "instruction": instr, "time_limit_seconds": max(10, min(600, tlim))})
+        st.session_state["_procedure_name"] = "Manual procedure note"
+        st.session_state["_procedure_steps"] = steps
+
+    proc_steps = st.session_state.get("_procedure_steps", [])
+    if proc_steps:
+        st.caption(f"Procedure plan: {st.session_state.get('_procedure_name', 'Session plan')}")
+        st.table(
+            [("Step", "Instruction", "Time (s)")] +
+            [(str(i+1), s.get("instruction", ""), str(s.get("time_limit_seconds", 60))) for i, s in enumerate(proc_steps[:8])]
         )
-
-        if mode_opt == "AI generate procedure":
-            proc_text = st.text_input(
-                "Procedure text (optional)",
-                value=st.session_state.get("_procedure_text", ""),
-                placeholder="Type a procedure name, or leave empty to let AI infer from session.",
-            )
-            st.session_state["_procedure_text"] = proc_text
-            if not resolve_brain_import() or generate_dynamic_syllabus is None:
-                st.warning("AI reasoning unavailable. Install brain dependencies first.")
-            elif st.button("AI Generate Procedure", width="stretch"):
-                st.session_state["_procedure_gen_error"] = ""
-                st.session_state["_procedure_gen_info"] = ""
-                if proc_text.strip():
-                    prompt = proc_text.strip()
-                    proc_name = proc_text.strip()
-                else:
-                    dets = st.session_state.get(KEY_LAST_DETECTIONS, [])
-                    tools = sorted({d.get("name", "") for d in dets if d.get("name", "")})
-                    prompt = (
-                        "Infer a likely surgical or medical lab procedure based on observed tools: "
-                        + ", ".join(tools)
-                    ) if tools else "Infer a likely basic surgical training procedure from current session context."
-                    proc_name = "AI inferred procedure"
-                st.session_state["_procedure_gen_pending"] = True
-                st.session_state["_procedure_gen_pending_prompt"] = prompt
-                st.session_state["_procedure_gen_pending_name"] = proc_name
-                st.rerun()
-
-            if st.session_state.get("_procedure_gen_pending", False):
-                prompt = st.session_state.get("_procedure_gen_pending_prompt", "")
-                proc_name = st.session_state.get("_procedure_gen_pending_name", "AI inferred procedure")
-                try:
-                    if not os.getenv("GOOGLE_API_KEY", "").strip():
-                        st.session_state["_procedure_gen_error"] = (
-                            "GOOGLE_API_KEY not found. Set it in .env or the AI settings panel."
-                        )
-                    else:
-                        with st.status("AI procedure generation in progress...", expanded=True) as status:
-                            st.write("1) Reading your procedure/context")
-                            st.write("2) Applying clinical safety reasoning (WHO-style)")
-                            st.write("3) Building step-by-step plan")
-                            res = generate_dynamic_syllabus(prompt)
-                            status.update(label="Procedure generation complete", state="complete")
-
-                        if SyllabusError is not None and isinstance(res, SyllabusError):
-                            st.session_state["_procedure_gen_error"] = f"AI procedure error: {res.error}"
-                        else:
-                            steps = normalize_procedure_steps(res)
-                            if not steps:
-                                st.session_state["_procedure_gen_error"] = (
-                                    "AI returned no steps. Try a clearer name (e.g. 'basic interrupted suturing')."
-                                )
-                            else:
-                                st.session_state["_procedure_name"] = proc_name
-                                st.session_state["_procedure_steps"] = steps
-                                st.session_state["_procedure_gen_info"] = f"Generated {len(steps)} procedure steps."
-                except Exception as e:
-                    st.session_state["_procedure_gen_error"] = f"Generation failed: {e}"
-                finally:
-                    st.session_state["_procedure_gen_pending"] = False
-        else:
-            table_seed = st.session_state.get("_manual_steps_table", [])
-            if not table_seed:
-                table_seed = [{"step_name": "Step 1", "instruction": "Prepare sterile field", "time_limit_seconds": 60}]
-            edited = st.data_editor(
-                table_seed, key="manual_steps_editor", num_rows="dynamic", width="stretch",
-                column_config={
-                    "step_name": st.column_config.TextColumn("Step"),
-                    "instruction": st.column_config.TextColumn("Instruction"),
-                    "time_limit_seconds": st.column_config.NumberColumn("Time (s)", min_value=10, max_value=600, step=5),
-                },
-                hide_index=True,
-            )
-            st.session_state["_manual_steps_table"] = edited
-            if st.button("Use Manual Procedure Table", width="stretch"):
-                steps = []
-                for i, row in enumerate(edited):
-                    instr = str(row.get("instruction", "")).strip()
-                    if not instr:
-                        continue
-                    step_name = str(row.get("step_name", "")).strip() or f"Step {i+1}"
-                    tlim = int(row.get("time_limit_seconds", 60) or 60)
-                    steps.append({"step_name": step_name, "instruction": instr, "time_limit_seconds": max(10, min(600, tlim))})
-                st.session_state["_procedure_name"] = "Manual procedure note"
-                st.session_state["_procedure_steps"] = steps
-
-        proc_steps = st.session_state.get("_procedure_steps", [])
-        if st.session_state.get("_procedure_gen_error", ""):
-            st.warning(st.session_state["_procedure_gen_error"])
-        if st.session_state.get("_procedure_gen_info", ""):
-            st.success(st.session_state["_procedure_gen_info"])
-        if proc_steps:
-            st.caption(f"Procedure plan: {st.session_state.get('_procedure_name', 'Session plan')}")
-            st.table(
-                [("Step", "Instruction", "Time (s)")] +
-                [(str(i+1), s.get("instruction", ""), str(s.get("time_limit_seconds", 60))) for i, s in enumerate(proc_steps[:8])]
-            )
 
     # --- Calibration ---
     evidence: EvidenceState = st.session_state[KEY_EVIDENCE]

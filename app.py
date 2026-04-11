@@ -73,44 +73,6 @@ try:
 except Exception:
     pass
 
-# --- Brain (Gemini AI) — optional ---
-
-try:
-    from brain import generate_final_critique, generate_dynamic_syllabus, SyllabusError
-    BRAIN_AVAILABLE = True
-    BRAIN_IMPORT_ERROR = ""
-except Exception:
-    generate_final_critique = None
-    generate_dynamic_syllabus = None
-    SyllabusError = None
-    BRAIN_AVAILABLE = False
-    import traceback
-    BRAIN_IMPORT_ERROR = "brain.py import failed: " + traceback.format_exc().splitlines()[-1]
-
-
-def resolve_brain_import() -> bool:
-    """Try importing brain.py lazily — useful if deps were installed after app start."""
-    global generate_final_critique, generate_dynamic_syllabus, SyllabusError
-    global BRAIN_AVAILABLE, BRAIN_IMPORT_ERROR
-    if BRAIN_AVAILABLE and generate_dynamic_syllabus is not None:
-        return True
-    try:
-        from brain import (
-            generate_final_critique as _gfc,
-            generate_dynamic_syllabus as _gds,
-            SyllabusError as _se,
-        )
-        generate_final_critique = _gfc
-        generate_dynamic_syllabus = _gds
-        SyllabusError = _se
-        BRAIN_AVAILABLE = True
-        BRAIN_IMPORT_ERROR = ""
-        return True
-    except Exception:
-        import traceback
-        BRAIN_AVAILABLE = False
-        BRAIN_IMPORT_ERROR = "brain.py import failed: " + traceback.format_exc().splitlines()[-1]
-        return False
 
 
 # --- Page config ---
@@ -159,8 +121,6 @@ def init_session_state() -> None:
         "_tts_queue": list, "_tts_busy_until": lambda: 0.0,
         KEY_TIP_HISTORY: list, KEY_WRIST_PATH: list,
         KEY_JERK_DATA: dict, KEY_ECONOMY_DATA: dict,
-        "_brain_summary": lambda: "", "_gemini_key": lambda: os.getenv("GOOGLE_API_KEY", ""),
-        "_ai_reasoning_enabled": lambda: True,
         "_procedure_text": lambda: "", "_procedure_name": lambda: "",
         "_procedure_steps": list,
         "_procedure_gen_error": lambda: "", "_procedure_gen_info": lambda: "",
@@ -302,11 +262,6 @@ with st.sidebar:
     badge_text, badge_cls = badge_map.get(mode, badge_map["PRE_OP"])
     st.markdown(f'<span class="status-badge {badge_cls}">{badge_text}</span>', unsafe_allow_html=True)
 
-    ai_enabled = st.session_state.get("_ai_reasoning_enabled", True)
-    if st.button("👁 AI Reasoning ON" if ai_enabled else "🙈 AI Reasoning OFF", width="stretch", key="ai_eye_toggle_btn"):
-        st.session_state["_ai_reasoning_enabled"] = not ai_enabled
-        st.rerun()
-
     st.markdown("---")
     st.markdown("### Video Source")
     source = st.radio("Feed", ["Live Webcam", "Upload Video"],
@@ -340,11 +295,6 @@ with st.sidebar:
     if webrtc_on:
         st.caption("WebRTC streams video in browser at 15-30 FPS. Click START in the player to begin.")
 
-    if resolve_brain_import():
-        st.caption("AI reasoning: ready")
-    else:
-        st.caption("AI reasoning: unavailable (install brain dependencies)")
-
     auto_trans = st.toggle("Auto-start Practice when ready", value=st.session_state.get(KEY_AUTO_TRANSITION, AUTO_TRANSITION_ENABLED), key="auto_trans_toggle")
     st.session_state[KEY_AUTO_TRANSITION] = auto_trans
 
@@ -365,14 +315,6 @@ with st.sidebar:
             st.session_state[KEY_CONFIG_FRAME_SKIP] = st.number_input("Frame skip", min_value=1, max_value=10, value=FRAME_SKIP_DEFAULT, step=1)
             cfg = get_config()
             st.caption(f"conf={cfg['conf_min']} imgsz={cfg['imgsz']} skip={cfg['frame_skip']}")
-        with st.expander("AI (optional)", expanded=False):
-            key_val = st.text_input("Gemini API key", value=st.session_state.get("_gemini_key", ""), type="password", help="Only stored in memory for this run.")
-            st.session_state["_gemini_key"] = key_val
-            if key_val:
-                os.environ["GOOGLE_API_KEY"] = key_val
-                st.caption("Gemini connected for AI summary features.")
-            elif os.getenv("GOOGLE_API_KEY", ""):
-                st.caption("Gemini key loaded from .env")
 
 # =============================================================================
 # Main header
@@ -476,10 +418,10 @@ elif run_feed:
 # =============================================================================
 
 if nav == "Setup":
-    render_setup_tab(preop_required, stable_seconds, is_demo, resolve_brain_import, generate_dynamic_syllabus, SyllabusError)
+    render_setup_tab(preop_required, stable_seconds, is_demo)
 
 if nav == "Practice":
-    render_practice_tab(intraop_rules, use_webrtc, get_config, resolve_brain_import, generate_final_critique, BRAIN_IMPORT_ERROR)
+    render_practice_tab(intraop_rules, use_webrtc, get_config)
 
 if nav == "Report":
     render_report_tab()

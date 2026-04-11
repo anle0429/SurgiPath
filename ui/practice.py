@@ -26,8 +26,7 @@ from src.hands import (
 from ui.components import section_header, technique_monitor, technique_monitor_empty
 from ui.helpers import (
     next_prompt_id, format_coach_message, prompt_sort_key,
-    compute_perf_summary, build_brain_event_log,
-    procedure_phase_from_elapsed,
+    compute_perf_summary, procedure_phase_from_elapsed,
 )
 from ui.tts import queue_tts, flush_tts_queue
 
@@ -36,9 +35,6 @@ def render_practice_tab(
     intraop_rules: list[dict],
     use_webrtc: bool,
     get_config,
-    resolve_brain_import,
-    generate_final_critique,
-    brain_import_error: str = "",
 ) -> None:
     section_header("02 / PRACTICE", "Practice Session")
 
@@ -141,27 +137,6 @@ def render_practice_tab(
 
     # --- Coach Prompt Cards ---
     _render_coach_cards(phase)
-
-    # --- AI Reasoning ---
-    st.markdown("**AI Reasoning**")
-    if not resolve_brain_import():
-        st.caption(brain_import_error or "AI reasoning unavailable.")
-    else:
-        if st.button("Generate AI reasoning for this session", key="brain_reason_btn", width="stretch"):
-            with st.spinner("Generating AI reasoning..."):
-                prompts_data = st.session_state.get(KEY_ALERTS_LOG, [])
-                overrides_data = st.session_state.get(KEY_OVERRIDES, [])
-                event_log = build_brain_event_log(prompts_data, overrides_data)
-                summary = generate_final_critique(
-                    procedure="Medical lab training session",
-                    clarity_feedback=[p.get("message", "") for p in prompts_data][-25:],
-                    event_log=event_log,
-                    mastery_score=max(0, 100 - len(prompts_data) * 2),
-                )
-                st.session_state["_brain_summary"] = summary
-        ai_now = st.session_state.get("_brain_summary", "")
-        if ai_now:
-            st.markdown(ai_now)
 
     # --- End session ---
     if st.button("End Lab Session", type="primary", width="stretch"):

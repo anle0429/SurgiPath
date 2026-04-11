@@ -38,13 +38,8 @@ from typing import Any
 import cv2
 import numpy as np
 
-# Use Streamlit cache when running in Streamlit; otherwise lru_cache
-try:
-    import streamlit as st
-    _cache = st.cache_resource
-except Exception:
-    from functools import lru_cache
-    _cache = lru_cache(maxsize=1)
+from functools import lru_cache
+_cache = lru_cache(maxsize=1)
 
 
 def _load_model(path: str) -> Any:
